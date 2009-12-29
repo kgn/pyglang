@@ -21,7 +21,7 @@ class TranslationError(Exception):
         return str(self.value)
 
 def unescape(s):
-    '''unescape html safe characters'''
+    '''Unescape html safe characters'''
     htmlCodes = (
         ('<', '&lt;'),
         ('>', '&gt;'),
@@ -50,12 +50,16 @@ def translate(text, **options):
     fromLang=None
     toLang='en'
     inputType = 'text'
+    textEncode = 'utf_8'
     
     if 'fromLang' in options:
         fromLang = options['fromLang']
         
     if 'toLang' in options:
         toLang = options['toLang']
+     
+    if 'encoding' in options:
+        textEncode = options['encoding']
         
     if 'inputType' in options and options['inputType'] == 'html':
         inputType = 'html'
@@ -74,7 +78,7 @@ def translate(text, **options):
     
     #try to encode the text as utf-8
     try:
-        params['q'] = text.encode('utf-8')
+        params['q'] = text.encode(textEncode)
     except UnicodeDecodeError:
         params['q'] = text
     

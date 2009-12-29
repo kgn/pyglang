@@ -3,7 +3,7 @@
 import unittest
 import PyGlang
 
-class testunescape(unittest.TestCase):
+class testUnescape(unittest.TestCase):
     def test(self):
         self.assertEqual('<', PyGlang.unescape('&lt;')) 
         self.assertEqual('>', PyGlang.unescape('&gt;')) 
