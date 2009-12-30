@@ -50,6 +50,13 @@ def getLanguages():
         languagesFile.close()
     return languages
 
+def getLanguageCode(language):
+    '''Given a language name return the language code'''
+    languageKey = language.lower()
+    if languageKey in getLanguages():
+        return getLanguages()[languageKey]
+    return language
+
 def getData(text, urlType, params=None, **options):
     '''Make the calls to the Google Language API and return the resutling data'''
     
@@ -66,17 +73,13 @@ def getData(text, urlType, params=None, **options):
     
     params['v'] = apiVersion
     
-    #try to encode the text
-    textEncode = 'utf_8'
-    if 'encoding' in options:
-        textEncode = options['encoding']
-        
+    #try to encode the text 
     try:
-        params['q'] = text.encode(textEncode)
+        params['q'] = text.encode('utf_8')
     except UnicodeDecodeError:
         params['q'] = text
     
-    #get the translated text from google    
+    #get the translated text from google
     jsonData = json.load(urllib.urlopen(fullUrl, data=urllib.urlencode(params)))
     responseData = jsonData['responseData']
     if responseData == None:
@@ -90,6 +93,8 @@ def getData(text, urlType, params=None, **options):
 
 def detect(text):
     '''
+    Use the google language api to detect the language of the given text.
+    
     http://ajax.googleapis.com/ajax/services/language/detect?v=1.0&q=hello
     '''
     #TODO: currently the detect call returns a 405 error...
@@ -107,42 +112,25 @@ def translate(text, **options):
     
     defaultToLang   = 'en'
     defaultFromLang = ''
-    defaultFormat   = 'text'
 
     #parse options
     def getToLang():
         if 'toLang' in options:
             if options['toLang'] == None or options['toLang'] == '':
                 return defaultToLang
-                
-            toLangKey = options['toLang'].lower()
-            if toLangKey in getLanguages():
-                return getLanguages()[toLangKey]
-                
-            return options['toLang']
+            return getLanguageCode(options['toLang'])
         return defaultToLang
             
     def getFromLang():
         if 'fromLang' in options:
             if options['fromLang'] == None or options['fromLang'].lower() == 'unknown':
                 return defaultFromLang
-                            
-            fromLangKey = options['fromLang'].lower()
-            if fromLangKey in getLanguages():
-                return getLanguages()[fromLangKey]
-                
-            return options['fromLang']
+            return getLanguageCode(options['fromLang'])
         return defaultFromLang
-    
-    def getFormat():
-        if 'format' in options:
-            return options['format']
-        return defaultFormat
     
     #setup parameters 
     params = {}
     params['langpair']  = '%s|%s' % (getFromLang(), getToLang())
-    params['format']    = getFormat()
     
     #call the google api
     return getData(text, 'translate', params, **options)
