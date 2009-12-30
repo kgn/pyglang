@@ -125,7 +125,12 @@ def _getData(text, urlType, params=None, **options):
         params['q'] = text
     
     #get the translated text from google
-    jsonData = json.load(urllib.urlopen(fullUrl, data=urllib.urlencode(params)))
+    if urlType == 'detect':
+        #for some reason passing the params to data does not work for detect...
+        result = urllib.urlopen('%s?%s' % (fullUrl, urllib.urlencode(params)))
+    else:
+        result = urllib.urlopen(fullUrl, data=urllib.urlencode(params))
+    jsonData = json.load(result)
     responseData = jsonData['responseData']
     if responseData == None:
         raise TranslationError(jsonData['responseDetails'])
