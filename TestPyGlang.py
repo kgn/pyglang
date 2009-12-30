@@ -5,12 +5,12 @@ import PyGlang
 
 class testUnescape(unittest.TestCase):
     def test(self):
-        self.assertEqual('<', PyGlang.unescape('&lt;')) 
-        self.assertEqual('>', PyGlang.unescape('&gt;')) 
-        self.assertEqual('"', PyGlang.unescape('&quot;')) 
-        self.assertEqual("'", PyGlang.unescape('&#39;')) 
-        self.assertEqual('&', PyGlang.unescape('&amp;')) 
-        self.assertEqual("<'&'>", PyGlang.unescape('&lt;&#39;&amp;&#39;&gt;'))
+        self.assertEqual('<', PyGlang._unescape('&lt;')) 
+        self.assertEqual('>', PyGlang._unescape('&gt;')) 
+        self.assertEqual('"', PyGlang._unescape('&quot;')) 
+        self.assertEqual("'", PyGlang._unescape('&#39;')) 
+        self.assertEqual('&', PyGlang._unescape('&amp;')) 
+        self.assertEqual("<'&'>", PyGlang._unescape('&lt;&#39;&amp;&#39;&gt;'))
         
     def testReturn(self):
         self.assertEqual('(Status "?")', PyGlang.translate('(status is "?")', fromLang='en', toLang='de')) 

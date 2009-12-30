@@ -21,21 +21,6 @@ class TranslationError(Exception):
     def __str__(self):
         return str(self.value)
 
-def unescape(s):
-    '''Unescape html safe characters'''
-    htmlCodes = (
-        ('<', '&lt;'),
-        ('>', '&gt;'),
-        ('"', '&quot;'),
-        ("'", '&#39;'),
-        #this has to be last
-        ('&', '&amp;'),
-    )
-
-    for eachItem in htmlCodes:
-        s = s.replace(eachItem[1], eachItem[0])
-    return s
-
 languages = None
 def getLanguages():
     '''
@@ -57,48 +42,15 @@ def getLanguageCode(language):
         return getLanguages()[languageKey]
     return language
 
-def getData(text, urlType, params=None, **options):
-    '''Make the calls to the Google Language API and return the resutling data'''
-    
-    if len(text) == 0:
-        return u''
-    
-    fullUrl = baseUrl
-    if not(fullUrl.endswith('/')):
-        fullUrl += '/'
-    fullUrl += urlType
-    
-    if params == None:
-        params = {}
-    
-    params['v'] = apiVersion
-    
-    #try to encode the text 
-    try:
-        params['q'] = text.encode('utf_8')
-    except UnicodeDecodeError:
-        params['q'] = text
-    
-    #get the translated text from google
-    jsonData = json.load(urllib.urlopen(fullUrl, data=urllib.urlencode(params)))
-    responseData = jsonData['responseData']
-    if responseData == None:
-        raise TranslationError(jsonData['responseDetails'])
-    else:
-        if urlType == 'translate' and responseData['translatedText'] != None:
-            return unescape(responseData['translatedText'])
-        elif urlType == 'detect' and responseData['language'] != None:
-            return unescape(responseData['language'])
-    return u''
-
 def detect(text):
     '''
     Use the google language api to detect the language of the given text.
-    
+
+    Example url:    
     http://ajax.googleapis.com/ajax/services/language/detect?v=1.0&q=hello
     '''
     #TODO: currently the detect call returns a 405 error...
-    return getData(text, 'detect')
+    return _getData(text, 'detect')
     
 def translate(text, **options):
     '''
@@ -133,4 +85,53 @@ def translate(text, **options):
     params['langpair']  = '%s|%s' % (getFromLang(), getToLang())
     
     #call the google api
-    return getData(text, 'translate', params, **options)
+    return _getData(text, 'translate', params, **options)
+
+def _unescape(s):
+    '''Unescape html safe characters'''
+    htmlCodes = (
+        ('<', '&lt;'),
+        ('>', '&gt;'),
+        ('"', '&quot;'),
+        ("'", '&#39;'),
+        #this has to be last
+        ('&', '&amp;'),
+    )
+
+    for eachItem in htmlCodes:
+        s = s.replace(eachItem[1], eachItem[0])
+    return s
+
+def _getData(text, urlType, params=None, **options):
+    '''Make the calls to the Google Language API and return the resutling data'''
+    
+    if len(text) == 0:
+        return u''
+    
+    fullUrl = baseUrl
+    if not(fullUrl.endswith('/')):
+        fullUrl += '/'
+    fullUrl += urlType
+    
+    if params == None:
+        params = {}
+    
+    params['v'] = apiVersion
+    
+    #try to encode the text 
+    try:
+        params['q'] = text.encode('utf_8')
+    except UnicodeDecodeError:
+        params['q'] = text
+    
+    #get the translated text from google
+    jsonData = json.load(urllib.urlopen(fullUrl, data=urllib.urlencode(params)))
+    responseData = jsonData['responseData']
+    if responseData == None:
+        raise TranslationError(jsonData['responseDetails'])
+    else:
+        if urlType == 'translate' and responseData['translatedText'] != None:
+            return _unescape(responseData['translatedText'])
+        elif urlType == 'detect' and responseData['language'] != None:
+            return _unescape(responseData['language'])
+    return u''
