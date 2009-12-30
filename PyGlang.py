@@ -52,7 +52,7 @@ def getLanguages():
 
 def getLanguageCode(language):
     '''Given a language name return the language code'''
-    languageKey = language.lower()
+    languageKey = language.strip().lower().replace(' ', '_')
     if languageKey in getLanguages():
         return getLanguages()[languageKey]
     return language
