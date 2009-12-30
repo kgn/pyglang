@@ -1,0 +1,31 @@
+PyGlang - Translate text with the 'Google AJAX Language API'
+
+By David Keegan <keegan3d@gmail.com>
+With contributions by John Burnett
+
+http://bitbucket.org/keegan3d/pyglang
+
+License
+~~~~~~~
+
+PyGlang is distributed under the MIT license, see the LICENSE file for more information.
+
+Installation
+~~~~~~~~~~~~
+
+This is a standard Python distutils distribution. To install the
+package, run the following command as an administrative user:
+
+    python setup.py install
+
+
+How to say 'Hello'
+~~~~~~~~~~~~~~~~~~
+
+import PyGlang
+
+for language in PyGlang.getLanguages().iterkeys():
+    try:
+        print language, PyGlang.translate('Hello', fromLang='English', toLang=language)
+     except PyGlang.TranslationError:
+        print ''
