@@ -3,6 +3,7 @@ Translate text with the 'Google AJAX Language API'
 http://code.google.com/apis/ajaxlanguage/documentation/
 '''
 
+import os
 import urllib
 try:
     #python2.6+
@@ -11,8 +12,8 @@ except ImportError:
     #python2.5
     import simplejson as json
 
-apiVersion  = '1.0'
-baseUrl     = 'http://ajax.googleapis.com/ajax/services/language/translate'
+apiVersion      = '1.0'
+baseUrl         = 'http://ajax.googleapis.com/ajax/services/language'
 
 class TranslationError(Exception):
     def __init__(self, value):
@@ -35,9 +36,65 @@ def unescape(s):
         s = s.replace(eachItem[1], eachItem[0])
     return s
 
-#TODO: add language enum
-#TODO: add detect function
+languages = None
+def getLanguages():
+    '''
+    Load the languages dictionary from the Languages.json file.
+    The dictionary is cached so the file is only read 
+    the first time the data is requested.
+    '''
+    global languages
+    if languages == None:
+        languagesFile = open(os.path.join(os.path.dirname(__file__), 'Languages.json'))
+        languages = json.load(languagesFile)
+        languagesFile.close()
+    return languages
 
+def getData(text, urlType, params=None, **options):
+    '''Make the calls to the Google Language API and return the resutling data'''
+    
+    if len(text) == 0:
+        return u''
+    
+    fullUrl = baseUrl
+    if not(fullUrl.endswith('/')):
+        fullUrl += '/'
+    fullUrl += urlType
+    
+    if params == None:
+        params = {}
+    
+    params['v'] = apiVersion
+    
+    #try to encode the text
+    textEncode = 'utf_8'
+    if 'encoding' in options:
+        textEncode = options['encoding']
+        
+    try:
+        params['q'] = text.encode(textEncode)
+    except UnicodeDecodeError:
+        params['q'] = text
+    
+    #get the translated text from google    
+    jsonData = json.load(urllib.urlopen(fullUrl, data=urllib.urlencode(params)))
+    responseData = jsonData['responseData']
+    if responseData == None:
+        raise TranslationError(jsonData['responseDetails'])
+    else:
+        if urlType == 'translate' and responseData['translatedText'] != None:
+            return unescape(responseData['translatedText'])
+        elif urlType == 'detect' and responseData['language'] != None:
+            return unescape(responseData['language'])
+    return u''
+
+def detect(text):
+    '''
+    http://ajax.googleapis.com/ajax/services/language/detect?v=1.0&q=hello
+    '''
+    #TODO: currently the detect call returns a 405 error...
+    return getData(text, 'detect')
+    
 def translate(text, **options):
     '''
     Use the google language api to translate the given text from one language to another.
@@ -47,48 +104,45 @@ def translate(text, **options):
     Example url:
     http://ajax.googleapis.com/ajax/services/language/translate?langpair=en|ru&q=hello&v=1.0
     '''
-    fromLang=None
-    toLang='en'
-    inputType = 'text'
-    textEncode = 'utf_8'
     
-    if 'fromLang' in options:
-        fromLang = options['fromLang']
-        
-    if 'toLang' in options:
-        toLang = options['toLang']
-     
-    if 'encoding' in options:
-        textEncode = options['encoding']
-        
-    if 'inputType' in options and options['inputType'] == 'html':
-        inputType = 'html'
-    
-    #if there is nothing to translate or no language to tranlate to reutrn an empty unicode string
-    if len(text) == 0 or len(toLang) == 0:
-        return u''
-        
-    if fromLang == None:
-        fromLang = ''
-    
-    #setup the arguments for the url   
-    params = {}
-    params['langpair']  = '%s|%s' % (fromLang, toLang)
-    params['v']         = apiVersion
-    
-    #try to encode the text as utf-8
-    try:
-        params['q'] = text.encode(textEncode)
-    except UnicodeDecodeError:
-        params['q'] = text
-    
-    #get the translated text from google
-    jsonData = json.load(urllib.urlopen(baseUrl, data=urllib.urlencode(params)))
-    responseData = jsonData['responseData']
-    if responseData == None:
-        raise TranslationError(jsonData['responseDetails'])
-    else:
-        if responseData['translatedText'] != None:
-            return unescape(responseData['translatedText'])
+    defaultToLang   = 'en'
+    defaultFromLang = ''
+    defaultFormat   = 'text'
+
+    #parse options
+    def getToLang():
+        if 'toLang' in options:
+            if options['toLang'] == None or options['toLang'] == '':
+                return defaultToLang
+                
+            toLangKey = options['toLang'].lower()
+            if toLangKey in getLanguages():
+                return getLanguages()[toLangKey]
+                
+            return options['toLang']
+        return defaultToLang
             
-    return u''
+    def getFromLang():
+        if 'fromLang' in options:
+            if options['fromLang'] == None or options['fromLang'].lower() == 'unknown':
+                return defaultFromLang
+                            
+            fromLangKey = options['fromLang'].lower()
+            if fromLangKey in getLanguages():
+                return getLanguages()[fromLangKey]
+                
+            return options['fromLang']
+        return defaultFromLang
+    
+    def getFormat():
+        if 'format' in options:
+            return options['format']
+        return defaultFormat
+    
+    #setup parameters 
+    params = {}
+    params['langpair']  = '%s|%s' % (getFromLang(), getToLang())
+    params['format']    = getFormat()
+    
+    #call the google api
+    return getData(text, 'translate', params, **options)
