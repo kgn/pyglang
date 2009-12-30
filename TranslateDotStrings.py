@@ -32,7 +32,10 @@ def langFromPath(filepath):
     return None
     
 def translate(fromFilepath, toFilepath):
-    '''Read a .strings file and localize it for the language of another .strings file'''
+    '''
+    Read a .strings file and localize it for the language of another .strings file.
+    The language of each file is determined by the what 'lproj' directory they reside in.
+    '''
     
     #detect encoding of output for printing
     language, output_encoding = locale.getdefaultlocale()
