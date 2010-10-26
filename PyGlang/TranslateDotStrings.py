@@ -2,36 +2,40 @@
 Translate a .strings file from one language to another.
 '''
 
+from __future__ import with_statement
+
 import re, sys, time
 import codecs, locale
 import PyGlang
 
-def detectEncoding(filepath):
+k_langPathRegEx = re.compile('.*/([^\.]+)\.lproj.+$')
+k_valueRegEx = re.compile('"([^"]*)"(\s*=\s*)"([^"]*)";', re.UNICODE)
+
+def DetectEncoding(filepath):
     '''
     Try to detect the file's encoding.
     If its not utf-16 assume it's utf-8, this should work for ascii
     files becuase the first 128 characters are the same...
     '''
     
-    f = open(filepath, 'r')
-    firstBytes = f.read(2)
-    f.close()
-    
-    if firstBytes == codecs.BOM_UTF16_BE:
-        return 'utf_16_be'
-    elif firstBytes == codecs.BOM_UTF16_LE:
-        return 'utf_16_le'
+    with open(filepath, 'r') as f:
+        firstBytes = f.read(2)
+
+        if firstBytes == codecs.BOM_UTF16_BE:
+            return 'utf_16_be'
+        elif firstBytes == codecs.BOM_UTF16_LE:
+            return 'utf_16_le'
+
     #use sig just encase there is a BOM in the file
     return 'utf_8_sig'
 
-def langFromPath(filepath):
+def LangFromPath(filepath):
     '''Get the languages from a filepath'''
-    pathMatch = re.match('.*/([^\.]+)\.lproj.+$', filepath)
+    pathMatch = k_langPathRegEx.match(filepath)
     if pathMatch:
         return pathMatch.group(1)
-    return None
     
-def translate(fromFilepath, toFilepath):
+def Translate(fromFilepath, toFilepath, utf8=False):
     '''
     Read a .strings file and localize it for the language of another .strings file.
     The language of each file is determined by the what 'lproj' directory they reside in.
@@ -41,31 +45,28 @@ def translate(fromFilepath, toFilepath):
     language, output_encoding = locale.getdefaultlocale()
     
     #detect the encodeing of the file
-    fromFileEncoding = detectEncoding(fromFilepath)
+    fromFileEncoding = 'utf_8' if utf8 else DetectEncoding(fromFilepath)
     
     #get the languages
-    fromLang = langFromPath(fromFilepath)
-    toLang = langFromPath(toFilepath)
+    fromLang = LangFromPath(fromFilepath)
+    toLang = LangFromPath(toFilepath)
     
     #regular expression
-    valueRegEx = re.compile('"([^"]*)"(\s*=\s*)"([^"]*)";', re.UNICODE)
     def transValue(regExMatch):
         value = regExMatch.group(3)
-        transText = PyGlang.translate(value, fromLang=fromLang, toLang=toLang, encoding=fromFileEncoding)
+        transText = PyGlang.Translate(value, fromLang=fromLang, toLang=toLang, encoding=fromFileEncoding)
         #TODO: only write this in command line mode
         print '%s > %s' % (value.encode(output_encoding), transText.encode(output_encoding))
         return '"%s"%s"%s";' % (regExMatch.group(1), regExMatch.group(2), transText)
     
     #read the file
-    fromFile = codecs.open(fromFilepath, 'r', fromFileEncoding)
-    toFile = codecs.open(toFilepath, 'w', fromFileEncoding)
-    for eachLine in fromFile:
-        toFile.write(valueRegEx.sub(transValue, eachLine))
-    
-    toFile.close()            
-    fromFile.close()
+    with codecs.open(fromFilepath, 'r', fromFileEncoding) as fromFile:
+        with codecs.open(toFilepath, 'w', fromFileEncoding) as toFile:
+            for eachLine in fromFile:
+                toFile.write(k_valueRegEx.sub(transValue, eachLine))
    
 if __name__ == '__main__':
+    #TODO: add more robust options
     startTime = time.time()
-    translate(sys.argv[1], sys.argv[2])
+    Translate(sys.argv[1], sys.argv[2], True)
     print 'Translated in %.2f seconds' % (time.time()-startTime)

@@ -3,6 +3,16 @@ Translate text with the 'Google AJAX Language API'
 http://code.google.com/apis/ajaxlanguage/documentation/
 '''
 
+from __future__ import with_statement
+
+__all__ = [
+    'TranslationError',
+    'GetLanguages',
+    'GetLanguageCode',
+    'Detect',
+    'Translate',
+]
+
 import os
 import urllib
 try:
@@ -12,37 +22,41 @@ except ImportError:
     #python2.5
     import simplejson as json
 
-apiVersion      = '1.0'
-baseUrl         = 'http://ajax.googleapis.com/ajax/services/language'
+k_apiVersion      = '1.0'
+k_baseUrl         = 'http://ajax.googleapis.com/ajax/services/language'
+k_htmlCodes = (
+    ('<', '&lt;'),
+    ('>', '&gt;'),
+    ('"', '&quot;'),
+    ("'", '&#39;'),
+    #this has to be last
+    ('&', '&amp;'),
+)
 
 class TranslationError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return str(self.value)
+    pass
 
-languages = None
-def getLanguages():
+g_languages = None
+def GetLanguages():
     '''
     Load the languages dictionary from the Languages.json file.
     The dictionary is cached so the file is only read 
     the first time the data is requested.
     '''
-    global languages
-    if languages == None:
-        languagesFile = open(os.path.join(os.path.dirname(__file__), 'Languages.json'))
-        languages = json.load(languagesFile)
-        languagesFile.close()
-    return languages
+    global g_languages
+    if not g_languages:
+        with open(os.path.join(os.path.dirname(__file__), 'Languages.json')) as languagesFile:
+            g_languages = json.load(languagesFile)
+    return g_languages
 
-def getLanguageCode(language):
+def GetLanguageCode(language):
     '''Given a language name return the language code'''
+    if not language:
+        return ''
     languageKey = language.strip().lower().replace(' ', '_')
-    if languageKey in getLanguages():
-        return getLanguages()[languageKey]
-    return language
+    return GetLanguages().get(languageKey, language)
 
-def detect(text):
+def Detect(text):
     '''
     Use the google language api to detect the language of the given text.
 
@@ -50,9 +64,9 @@ def detect(text):
     http://ajax.googleapis.com/ajax/services/language/detect?v=1.0&q=hello
     '''
     #TODO: currently the detect call returns a 405 error...
-    return _getData(text, 'detect')
+    return _GetData(text, 'detect')
     
-def translate(text, **options):
+def Translate(text, **options):
     '''
     Use the google language api to translate the given text from one language to another.
     English is the default 'translate to' language, 
@@ -61,69 +75,43 @@ def translate(text, **options):
     Example url:
     http://ajax.googleapis.com/ajax/services/language/translate?langpair=en|ru&q=hello&v=1.0
     '''
-    
-    defaultToLang   = 'en'
-    defaultFromLang = ''
 
-    #parse options
-    def getToLang():
-        if 'toLang' in options:
-            if options['toLang'] == None or options['toLang'] == '':
-                return defaultToLang
-            return getLanguageCode(options['toLang'])
-        return defaultToLang
-            
-    def getFromLang():
-        if 'fromLang' in options:
-            if options['fromLang'] == None or options['fromLang'].lower() == 'unknown':
-                return defaultFromLang
-            return getLanguageCode(options['fromLang'])
-        return defaultFromLang
-    
-    #setup parameters 
-    params = {}
-    params['langpair']  = '%s|%s' % (getFromLang(), getToLang())
+    params = {
+        'langpair' : '%s|%s' % (
+            GetLanguageCode(options.get('fromLang', '')),
+            GetLanguageCode(options.get('toLang', 'en')),
+        ),
+    }
     
     #call the google api
-    return _getData(text, 'translate', params, **options)
+    return _GetData(text, 'translate', params, **options)
 
-def _unescape(s):
+def _Unescape(s):
     '''Unescape html safe characters'''
-    htmlCodes = (
-        ('<', '&lt;'),
-        ('>', '&gt;'),
-        ('"', '&quot;'),
-        ("'", '&#39;'),
-        #this has to be last
-        ('&', '&amp;'),
-    )
+    if not s:
+        return u''
 
-    for eachItem in htmlCodes:
-        s = s.replace(eachItem[1], eachItem[0])
+    for replace, search in k_htmlCodes:
+        s = s.replace(search, replace)
     return s
 
-def _getData(text, urlType, params=None, **options):
+def _GetData(text, urlType, params=None, **options):
     '''Make the calls to the Google Language API and return the resutling data'''
     
-    if len(text) == 0:
+    if not text:
         return u''
+
+    params = params or {}
+    fullUrl = '%s/%s' % (k_baseUrl.rstrip('/'), urlType)
     
-    fullUrl = baseUrl
-    if not(fullUrl.endswith('/')):
-        fullUrl += '/'
-    fullUrl += urlType
-    
-    if params == None:
-        params = {}
-    
-    params['v'] = apiVersion
+    params['v'] = k_apiVersion
     
     #try to encode the text 
     try:
         params['q'] = text.encode('utf_8')
     except UnicodeDecodeError:
         params['q'] = text
-    
+
     #get the translated text from google
     if urlType == 'detect':
         #for some reason passing the params to data does not work for detect...
@@ -131,12 +119,12 @@ def _getData(text, urlType, params=None, **options):
     else:
         result = urllib.urlopen(fullUrl, data=urllib.urlencode(params))
     jsonData = json.load(result)
-    responseData = jsonData['responseData']
-    if responseData == None:
+    responseData = jsonData.get('responseData')
+    if not responseData:
         raise TranslationError(jsonData['responseDetails'])
     else:
-        if urlType == 'translate' and responseData['translatedText'] != None:
-            return _unescape(responseData['translatedText'])
-        elif urlType == 'detect' and responseData['language'] != None:
-            return _unescape(responseData['language'])
+        if urlType == 'translate':
+            return _Unescape(responseData.get('translatedText'))
+        elif urlType == 'detect':
+            return _Unescape(responseData.get('language'))
     return u''

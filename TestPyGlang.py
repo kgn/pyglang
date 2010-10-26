@@ -1,85 +1,85 @@
  #-*- coding: utf-8 -*-
 
 import unittest
-import PyGlang
+from PyGlang import PyGlang
 
 class testUnescape(unittest.TestCase):
     def test(self):
-        self.assertEqual('<', PyGlang._unescape('&lt;')) 
-        self.assertEqual('>', PyGlang._unescape('&gt;')) 
-        self.assertEqual('"', PyGlang._unescape('&quot;')) 
-        self.assertEqual("'", PyGlang._unescape('&#39;')) 
-        self.assertEqual('&', PyGlang._unescape('&amp;')) 
-        self.assertEqual("<'&'>", PyGlang._unescape('&lt;&#39;&amp;&#39;&gt;'))
+        self.assertEqual('<', PyGlang._Unescape('&lt;'))
+        self.assertEqual('>', PyGlang._Unescape('&gt;'))
+        self.assertEqual('"', PyGlang._Unescape('&quot;'))
+        self.assertEqual("'", PyGlang._Unescape('&#39;'))
+        self.assertEqual('&', PyGlang._Unescape('&amp;'))
+        self.assertEqual("<'&'>", PyGlang._Unescape('&lt;&#39;&amp;&#39;&gt;'))
         
     def testReturn(self):
-        self.assertEqual('(Status "?")', PyGlang.translate('(status is "?")', fromLang='en', toLang='de')) 
-        self.assertEqual('Klon zu <...>', PyGlang.translate('Clone to <...>', fromLang='en', toLang='de'))
-        self.assertEqual("it's cold", PyGlang.translate("it's cold", fromLang='en', toLang='en')) 
+        self.assertEqual('(Status "?")', PyGlang.Translate('(status is "?")', fromLang='en', toLang='de'))
+        self.assertEqual('Klon zu <...>', PyGlang.Translate('Clone to <...>', fromLang='en', toLang='de'))
+        self.assertEqual("it's cold", PyGlang.Translate("it's cold", fromLang='en', toLang='en'))
 
 class testDetect(unittest.TestCase):
     def test(self):
-        self.assertEqual('en', PyGlang.detect('hello world'))
-        self.assertEqual('de', PyGlang.detect(u'schließen'))
-        self.assertEqual('ja', PyGlang.detect(u'こんにちは'))
+        self.assertEqual('en', PyGlang.Detect('hello world'))
+        self.assertEqual('de', PyGlang.Detect(u'schließen'))
+        self.assertEqual('ja', PyGlang.Detect(u'こんにちは'))
     
 class testTranslate(unittest.TestCase):
     def testBlanks(self):
-        self.assertEqual('', PyGlang.translate(u''))
-        self.assertEqual('', PyGlang.translate(''))
-        self.assertEqual('', PyGlang.translate(u'', fromLang=''))
-        self.assertEqual('', PyGlang.translate('', fromLang=''))
-        self.assertEqual('', PyGlang.translate(u'', fromLang='', toLang=''))
-        self.assertEqual('', PyGlang.translate('', fromLang='', toLang=''))
-        self.assertEqual('', PyGlang.translate(u'', fromLang=None, toLang=''))
-        self.assertEqual('', PyGlang.translate('', fromLang=None, toLang=''))        
+        self.assertEqual('', PyGlang.Translate(u''))
+        self.assertEqual('', PyGlang.Translate(''))
+        self.assertEqual('', PyGlang.Translate(u'', fromLang=''))
+        self.assertEqual('', PyGlang.Translate('', fromLang=''))
+        self.assertEqual('', PyGlang.Translate(u'', fromLang='', toLang=''))
+        self.assertEqual('', PyGlang.Translate('', fromLang='', toLang=''))
+        self.assertEqual('', PyGlang.Translate(u'', fromLang=None, toLang=''))
+        self.assertEqual('', PyGlang.Translate('', fromLang=None, toLang=''))
         
     def testDetectLang(self):
-        self.assertEqual('Hello World', PyGlang.translate('Hallo Welt'))
-        self.assertEqual('"two eggs"', PyGlang.translate('"dos huevos"'))
-        self.assertEqual('movie night', PyGlang.translate('soirée cinéma'))
-        self.assertEqual('close', PyGlang.translate(u'schließen'))
-        self.assertEqual('Hello', PyGlang.translate(u'こんにちは'))
+        self.assertEqual('Hello World', PyGlang.Translate('Hallo Welt'))
+        self.assertEqual('"Two eggs"', PyGlang.Translate('"dos huevos"'))
+        self.assertEqual('Movie Night', PyGlang.Translate('soirée cinéma'))
+        self.assertEqual('close', PyGlang.Translate(u'schließen'))
+        self.assertEqual('Hi', PyGlang.Translate(u'こんにちは'))
         
     def testFromLang(self):
-        self.assertEqual('Hello World', PyGlang.translate('Hallo Welt', fromLang='german'))
-        self.assertEqual('<2> two eggs', PyGlang.translate('<2> dos huevos', fromLang='es'))
-        self.assertEqual('movie night', PyGlang.translate('soirée cinéma', fromLang='french'))
-        self.assertEqual('close', PyGlang.translate(u'schließen', fromLang='de'))
-        self.assertEqual('Hello', PyGlang.translate(u'こんにちは', fromLang='ja'))
-        self.assertEqual('What?', PyGlang.translate(u'¿Qué?', fromLang='spanish'))
+        self.assertEqual('Hello World', PyGlang.Translate('Hallo Welt', fromLang='german'))
+        self.assertEqual('<2> two eggs', PyGlang.Translate('<2> dos huevos', fromLang='es'))
+        self.assertEqual('Movie Night', PyGlang.Translate('soirée cinéma', fromLang='french'))
+        self.assertEqual('close', PyGlang.Translate(u'schließen', fromLang='de'))
+        self.assertEqual('Hi', PyGlang.Translate(u'こんにちは', fromLang='ja'))
+        self.assertEqual('What?', PyGlang.Translate(u'¿Qué?', fromLang='spanish'))
         
     def testDefaultToLang(self):
-        self.assertEqual('Hello World', PyGlang.translate('Hallo Welt', fromLang=None))
-        self.assertEqual('two eggs', PyGlang.translate('dos huevos', fromLang=None))
-        self.assertEqual('movie night', PyGlang.translate('soirée cinéma', fromLang=None)) 
-        self.assertEqual('close', PyGlang.translate(u'schließen', fromLang=None))
-        self.assertEqual('Hello', PyGlang.translate(u'こんにちは', fromLang=None))
+        self.assertEqual('Hello World', PyGlang.Translate('Hallo Welt', fromLang=None))
+        self.assertEqual('two eggs', PyGlang.Translate('dos huevos', fromLang=None))
+        self.assertEqual('Movie Night', PyGlang.Translate('soirée cinéma', fromLang=None))
+        self.assertEqual('close', PyGlang.Translate(u'schließen', fromLang=None))
+        self.assertEqual('Hi', PyGlang.Translate(u'こんにちは', fromLang=None))
         
     def testDetectToLang(self):
-        self.assertEqual(u'fichier', PyGlang.translate('file', fromLang=None, toLang='fr'))
-        self.assertEqual(u'cerrar', PyGlang.translate('close', fromLang=None, toLang='es'))
-        self.assertEqual(u'sichern', PyGlang.translate('save', fromLang=None, toLang='de'))
-        self.assertEqual(u'schließen', PyGlang.translate('close', fromLang=None, toLang='de'))
-        self.assertEqual(u'こんにちは', PyGlang.translate('Hello', fromLang=None, toLang='ja'))
+        self.assertEqual(u'fichier', PyGlang.Translate('file', fromLang=None, toLang='fr'))
+        self.assertEqual(u'cerrar', PyGlang.Translate('close', fromLang=None, toLang='es'))
+        self.assertEqual(u'sparen', PyGlang.Translate('save', fromLang=None, toLang='de'))
+        self.assertEqual(u'schließen', PyGlang.Translate('close', fromLang=None, toLang='de'))
+        self.assertEqual(u'こんにちは', PyGlang.Translate('Hi', fromLang=None, toLang='ja'))
         
     def testToLang(self):
-        self.assertEqual(u'vif', PyGlang.translate('the quick', fromLang='en', toLang='fr'))
-        self.assertEqual(u'saxofón', PyGlang.translate('brown fox', fromLang='English', toLang='es'))
-        self.assertEqual(u'springt über', PyGlang.translate('jumps over', fromLang='en', toLang='de'))
-        self.assertEqual(u'ленивый', PyGlang.translate('the lazy', fromLang='english', toLang='Russian'))
-        self.assertEqual(u'犬', PyGlang.translate('dog', fromLang='en', toLang='ja'))
+        self.assertEqual(u'la rapide', PyGlang.Translate('the quick', fromLang='en', toLang='fr'))
+        self.assertEqual(u'zorro marrón', PyGlang.Translate('brown fox', fromLang='English', toLang='es'))
+        self.assertEqual(u'springt über', PyGlang.Translate('jumps over', fromLang='en', toLang='de'))
+        self.assertEqual(u'ленивых', PyGlang.Translate('the lazy', fromLang='english', toLang='Russian'))
+        self.assertEqual(u'犬', PyGlang.Translate('dog', fromLang='en', toLang='ja'))
         
-        self.assertEqual('hello', PyGlang.translate('bonjour', fromLang='fr', toLang='English'))
-        self.assertEqual('bye', PyGlang.translate('au revoir', fromLang='fr', toLang='en'))
-        self.assertEqual('no', PyGlang.translate('nein', fromLang='de', toLang='english'))
+        self.assertEqual('hello', PyGlang.Translate('bonjour', fromLang='fr', toLang='English'))
+        self.assertEqual('goodbye', PyGlang.Translate('au revoir', fromLang='fr', toLang='en'))
+        self.assertEqual('no', PyGlang.Translate('nein', fromLang='de', toLang='english'))
     
-        self.assertEqual(u'怠けた', PyGlang.translate(u'ленивый', fromLang='ru', toLang='ja'))
-        self.assertEqual('Saxofon', PyGlang.translate(u'saxofón', fromLang='es', toLang='cs'))
+        self.assertEqual(u'怠惰な', PyGlang.Translate(u'ленивый', fromLang='ru', toLang='ja'))
+        self.assertEqual('Saxofon', PyGlang.Translate(u'saxofón', fromLang='es', toLang='cs'))
     
     def testError(self):
-        self.assertRaises(PyGlang.TranslationError, PyGlang.translate, 'hello', fromLang='en', toLang='foo')
-        self.assertRaises(PyGlang.TranslationError, PyGlang.translate, 'test', fromLang=None, toLang='foo')
+        self.assertRaises(PyGlang.TranslationError, PyGlang.Translate, 'hello', fromLang='en', toLang='foo')
+        self.assertRaises(PyGlang.TranslationError, PyGlang.Translate, 'test', fromLang=None, toLang='foo')
         
     def testLongText(self):
         #from: http://etext.virginia.edu/toc/modeng/public/Twa2Huc.html
@@ -132,7 +132,7 @@ class testTranslate(unittest.TestCase):
             I got up and turned around in my tracks three times and crossed my breast every time; and then I tied up a little lock of my hair with a 
             thread to keep witches away. But I hadn't no confidence. You do that when you've lost a horseshoe that you've found, instead of nailing it 
             up over the door, but I hadn't ever heard anybody say it was any way to keep off bad luck when you'd killed a spider.'''
-        self.assertRaises(PyGlang.TranslationError, PyGlang.translate, longText)
+        self.assertRaises(PyGlang.TranslationError, PyGlang.Translate, longText)
         
 if __name__ == '__main__':
     unittest.main()
