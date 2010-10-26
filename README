@@ -24,8 +24,8 @@ How to say 'Hello'
 
 import PyGlang
 
-for language in PyGlang.getLanguages().iterkeys():
+for language in PyGlang.GetLanguages().iterkeys():
     try:
-        print language, PyGlang.translate('Hello', fromLang='English', toLang=language)
+        print language, PyGlang.Translate('Hello', fromLang='English', toLang=language)
      except PyGlang.TranslationError:
         print ''
