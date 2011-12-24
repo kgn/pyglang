@@ -14,8 +14,8 @@ How to say 'Hello'
          except PyGlang.TranslationError:
             print ''
 
-By David Keegan <contact@inscopeapps.com>
-With contributions from John Burnett
+By [David Keegan](http://github.com/kgn)
+With contributions from [John Burnett](http://github.com/johnburnett),
 
 Documentation
 ========
