@@ -15,7 +15,7 @@ How to say 'Hello'
             print ''
 
 By [David Keegan](http://github.com/kgn)
-With contributions from [John Burnett](http://github.com/johnburnett),
+With contributions from [John Burnett](http://github.com/johnburnett).
 
 Documentation
 ========
